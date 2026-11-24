@@ -1,0 +1,35 @@
+@{
+    ViewData["Title"] = "Subir archivo";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">Importar comprobantes desde Excel</h1>
+    <a asp-action="DescargarPlantilla" class="btn btn-outline-secondary">Descargar plantilla</a>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-body">
+                <form asp-action="Subir" method="post" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="archivo" class="form-label">Archivo .xlsx (máximo 10 MB)</label>
+                        <input type="file" id="archivo" name="archivo" class="form-control" accept=".xlsx" required />
+                    </div>
+                    <button type="submit" class="btn btn-primary">Procesar y ver vista previa</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <h2 class="h5">Cómo llenar la plantilla</h2>
+        <ul>
+            <li>Descargue la plantilla con el botón de arriba. Cada encabezado tiene una nota con los valores permitidos.</li>
+            <li>Cada fila es una línea de detalle. Las filas con la misma <strong>Empresa</strong> y el mismo <strong>ENCF</strong> forman un solo comprobante.</li>
+            <li>Repita los datos de encabezado (fechas, comprador, etc.) en todas las filas del comprobante: deben ser iguales.</li>
+            <li>El tipo de e-CF se toma del ENCF (por ejemplo, <code>E31…</code> es Crédito Fiscal).</li>
+            <li>Deje en blanco las columnas que no aplican al tipo. Los datos del emisor no se piden: se obtienen de la empresa.</li>
+        </ul>
+    </div>
+</div>

@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/FeExcel.Application/FeExcel.Application.csproj" />
+    <Project Path="src/FeExcel.Domain/FeExcel.Domain.csproj" />
+    <Project Path="src/FeExcel.Infrastructure/FeExcel.Infrastructure.csproj" />
+    <Project Path="src/FeExcel.Web/FeExcel.Web.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/FeExcel.Application.Tests/FeExcel.Application.Tests.csproj" />
+  </Folder>
+</Solution>

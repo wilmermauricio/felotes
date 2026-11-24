@@ -1,0 +1,7 @@
+@model int
+@{
+    ViewData["Title"] = "Importación confirmada";
+}
+
+<div class="alert alert-success">Se enviaron @Model comprobantes</div>
+<a asp-action="Index" class="btn btn-primary">Importar otro archivo</a>

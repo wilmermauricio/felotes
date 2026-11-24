@@ -1,0 +1,17 @@
+# Compilación
+bin/
+obj/
+TestResults/
+
+# Visual Studio / Rider
+.vs/
+.idea/
+*.user
+*.suo
+
+# Configuración local
+.claude/settings.local.json
+appsettings.*.local.json
+
+# Archivos temporales de Office
+~$*

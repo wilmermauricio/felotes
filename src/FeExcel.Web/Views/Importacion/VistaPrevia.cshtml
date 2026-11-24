@@ -1,0 +1,169 @@
+@model VistaPreviaViewModel
+@{
+    ViewData["Title"] = "Vista previa";
+    const int ColumnasComprobante = 10;
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+    <div>
+        <h1 class="h3 mb-1">Vista previa</h1>
+        <div class="text-muted">@Model.NombreArchivo</div>
+    </div>
+    <form asp-action="Eliminar" asp-route-id="@Model.Id" method="post"
+          onsubmit="return confirm('¿Eliminar esta carga? Tendrá que volver a subir el archivo.');">
+        <button type="submit" class="btn btn-outline-danger">Eliminar carga y subir de nuevo</button>
+    </form>
+</div>
+
+<section class="card mb-3">
+    <div class="card-header">Resumen de la carga</div>
+    <div class="card-body">
+        <div class="d-flex flex-wrap gap-4 mb-3">
+            <div><div class="text-muted small">Comprobantes</div><div class="fs-4 fw-semibold">@Model.Resumen.TotalComprobantes</div></div>
+            <div><div class="text-muted small">Líneas</div><div class="fs-4 fw-semibold">@Model.Resumen.TotalLineas</div></div>
+            <div><div class="text-muted small">Válidos</div><div class="fs-4 fw-semibold text-success">@Model.Resumen.Validos</div></div>
+            <div><div class="text-muted small">Con errores</div><div class="fs-4 fw-semibold @(Model.Resumen.ConErrores > 0 ? "text-danger" : "")">@Model.Resumen.ConErrores</div></div>
+        </div>
+
+        @if (Model.ResumenPorTipo.Count > 0)
+        {
+            <table class="table table-sm table-bordered tabla-separada mb-0">
+                <thead>
+                    <tr>
+                        <th>Tipo de e-CF</th>
+                        <th class="text-end">Comprobantes</th>
+                        <th class="text-end">Con errores</th>
+                        <th class="text-end">Monto total (válidos)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var tipo in Model.ResumenPorTipo)
+                    {
+                        <tr>
+                            <td>@tipo.Tipo</td>
+                            <td class="text-end">@tipo.Cantidad</td>
+                            <td class="text-end @(tipo.ConErrores > 0 ? "text-danger fw-semibold" : "")">@tipo.ConErrores</td>
+                            <td class="text-end">@tipo.MontoTotal.ToString("N2")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</section>
+
+@if (!Model.PuedeConfirmar)
+{
+    <div class="alert alert-danger">Corrija los errores en el archivo, elimine esta carga y vuelva a subirlo para poder confirmar.</div>
+}
+
+@if (Model.ErroresGenerales.Count > 0)
+{
+    <div class="card border-danger mb-3">
+        <div class="card-header text-danger">Errores del archivo</div>
+        <ul class="list-group list-group-flush">
+            @foreach (var error in Model.ErroresGenerales)
+            {
+                <li class="list-group-item">@error</li>
+            }
+        </ul>
+    </div>
+}
+
+@if (Model.Comprobantes.Count > 0)
+{
+    <div class="d-flex flex-wrap align-items-center gap-3 mb-2">
+        <input type="search" id="buscador" class="form-control buscador" placeholder="Buscar en todos los campos..."
+               aria-label="Buscar comprobantes" autocomplete="off" />
+        <span id="contador" class="text-muted" data-total="@Model.Comprobantes.Count">
+            @Model.Comprobantes.Count de @Model.Comprobantes.Count comprobantes
+        </span>
+    </div>
+
+    <table class="table table-bordered tabla-separada tabla-comprobantes align-middle" id="tabla-comprobantes">
+        <thead>
+            <tr>
+                <th class="col-expandir"><span class="visually-hidden">Expandir</span></th>
+                <th>Estado</th>
+                <th>Empresa</th>
+                <th>ENCF</th>
+                <th>Tipo</th>
+                <th>Fecha emisión</th>
+                <th>Comprador</th>
+                <th class="text-end">Líneas</th>
+                <th class="text-end">ITBIS</th>
+                <th class="text-end">Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var comprobante in Model.Comprobantes)
+            {
+                var expandido = !comprobante.EsValido;
+                <tr class="fila-comprobante @(comprobante.EsValido ? "" : "table-danger")"
+                    data-busqueda="@comprobante.TextoBusqueda" aria-expanded="@(expandido ? "true" : "false")">
+                    <td class="col-expandir">
+                        <button type="button" class="btn btn-sm btn-link p-0 boton-expandir" aria-label="Ver detalle">@(expandido ? "▾" : "▸")</button>
+                    </td>
+                    <td><span class="badge @(comprobante.EsValido ? "bg-success" : "bg-danger")">@(comprobante.EsValido ? "Válido" : "Con errores")</span></td>
+                    <td>@comprobante.Empresa</td>
+                    <td class="text-nowrap"><strong>@comprobante.Encf</strong></td>
+                    <td>@comprobante.Tipo</td>
+                    <td class="text-nowrap">@comprobante.FechaEmision?.ToString("dd-MM-yyyy")</td>
+                    <td>@comprobante.Comprador</td>
+                    <td class="text-end">@comprobante.Detalles.Count</td>
+                    <td class="text-end">@((comprobante.TotalItbis ?? (comprobante.EsValido ? 0 : null))?.ToString("N2"))</td>
+                    <td class="text-end fw-semibold">@comprobante.MontoTotal?.ToString("N2")</td>
+                </tr>
+                <tr class="fila-detalle" hidden="@(!expandido)">
+                    <td colspan="@ColumnasComprobante">
+                        @if (comprobante.Errores.Count > 0)
+                        {
+                            <ul class="text-danger mb-2">
+                                @foreach (var error in comprobante.Errores)
+                                {
+                                    <li>@error</li>
+                                }
+                            </ul>
+                        }
+
+                        <table class="table table-sm table-bordered tabla-separada mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Línea</th>
+                                    <th>Fila Excel</th>
+                                    <th>Nombre</th>
+                                    <th class="text-end">Cantidad</th>
+                                    <th class="text-end">Precio unitario</th>
+                                    <th class="text-end">Monto</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var detalle in comprobante.Detalles)
+                                {
+                                    <tr>
+                                        <td>@detalle.Linea</td>
+                                        <td>@detalle.FilaExcel</td>
+                                        <td>@detalle.Nombre</td>
+                                        <td class="text-end">@detalle.Cantidad?.ToString("N2")</td>
+                                        <td class="text-end">@detalle.PrecioUnitario?.ToString("N2")</td>
+                                        <td class="text-end">@detalle.MontoItem?.ToString("N2")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </td>
+                </tr>
+            }
+            <tr id="sin-resultados" hidden>
+                <td colspan="@ColumnasComprobante" class="text-center text-muted">Ningún comprobante coincide con la búsqueda</td>
+            </tr>
+        </tbody>
+    </table>
+}
+
+@if (Model.PuedeConfirmar)
+{
+    <form asp-action="Confirmar" asp-route-id="@Model.Id" method="post" class="mt-3 text-end">
+        <button type="submit" class="btn btn-primary">Confirmar y enviar @Model.Resumen.Validos comprobantes</button>
+    </form>
+}
